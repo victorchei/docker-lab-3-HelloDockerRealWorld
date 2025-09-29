@@ -1,0 +1,27 @@
+version: '3'
+services:
+  frontend:
+    image: node:alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: npx serve -s . -l 8080
+    ports:
+      - '8080:8080'
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    command: npm start
+    ports:
+      - '3001:3001'
+    environment:
+      - PORT=3001
+      - HOST=0.0.0.0
+      - MONGO_URL=mongodb://api_db:27017/api
+    depends_on:
+      - api_db
+
+  api_db:
+    image: mongo:latest
