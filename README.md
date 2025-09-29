@@ -11,29 +11,48 @@
 
 ## Архітектура проекту
 
+Проект розділений на **3 окремі репозиторії**:
+
+### 1. Головний репозиторій (HelloDockerRealWorld)
+
 ```
 HelloDockerRealWorld/
-├── frontend/                 # Frontend сервіс (HTML+CSS+JS)
-│   ├── Dockerfile           # Docker конфігурація для Nginx
-│   ├── nginx.conf           # Конфігурація Nginx веб-сервера
-│   ├── index.html           # Головна сторінка
-
-│   ├── css/
-│   │   └── styles.css       # Стилі інтерфейсу
-│   └── js/                  # Простий функціональний підхід
-│       ├── app.js           # Головний файл застосунку
-│       ├── utils.js         # Утилітарні функції
-│       └── constants.js     # Константи
-├── api/                     # Backend API сервіс (Node.js)
-│   ├── Dockerfile           # Docker конфігурація для Node.js
-│   ├── package.json         # Залежності Node.js
-│   ├── app.js               # Головний файл сервера
-│   ├── models/              # Моделі MongoDB
-│   │   └── User.js          # Модель користувача
-│   └── routes/              # API маршрути
-│       └── users.js         # Маршрути для користувачів
 ├── docker-compose.yml       # Конфігурація всіх сервісів
-└── README.md                # Інструкції та документація
+├── README.md                # Інструкції та документація
+├── frontend/                # Git submodule або клонований репозиторій
+├── api/                     # Git submodule або клонований репозиторій
+└── ...
+```
+
+### 2. Frontend репозиторій (docker-lab-3-frontend)
+
+```
+docker-lab-3-frontend/
+├── index.html               # Головна сторінка
+├── README.md                # Документація frontend
+├── css/
+│   └── styles.css           # Стилі інтерфейсу
+└── js/                      # Простий функціональний підхід
+    ├── app.js               # Головний файл застосунку
+    ├── utils.js             # Утилітарні функції
+    └── constants.js         # Константи
+```
+
+### 3. API репозиторій (docker-lab-3-api)
+
+```
+docker-lab-3-api/
+├── Dockerfile               # Docker конфігурація для Node.js
+├── package.json             # Залежності Node.js
+├── README.md                # Документація API
+├── src/
+│   ├── app.js               # Головний файл сервера
+│   ├── configuration/
+│   │   └── index.js         # Конфігурація
+│   ├── models/
+│   │   └── user.js          # Модель користувача
+│   └── routers/
+│       └── user.js          # Маршрути для користувачів
 ```
 
 ## Архітектура системи
@@ -95,11 +114,19 @@ services:
 docker compose up -d
 ```
 
-**Перебудова застосунку (після змін в коді):**
+**Перебудова застосунку (після змін в API коді):**
 
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
+
+**Швидкий перезапуск після змін в frontend (без перебудови):**
+
+```bash
+docker compose restart frontend
+```
+
+> **Примітка**: Завдяки volume монтуванню, зміни в frontend файлах відразу відображаються без перебудови контейнера.
 
 **Перегляд працюючих контейнерів:**
 
@@ -121,11 +148,42 @@ docker compose down
 
 ### 2. Лабораторна робота 3 - Docker Compose з базою даних
 
-#### Клонування репозиторію
+#### Клонування репозиторіїв
+
+**Опція 1: Клонування всіх репозиторіїв окремо**
 
 ```bash
-cd HelloDockerRealWorld
-git clone https://gitlab.com/web-systems-docker/docker-nodejs-app-lab2 .
+# 1. Клонуємо головний репозиторій з docker-compose.yml
+git clone https://github.com/victorchei/docker-lab-3-HelloDockerRealWorld.git
+cd docker-lab-3-HelloDockerRealWorld
+
+# 2. Клонуємо frontend репозиторій
+git clone https://github.com/victorchei/docker-lab-3-frontend.git frontend
+
+# 3. Клонуємо API репозиторій
+git clone https://github.com/victorchei/docker-lab-3-api.git api
+```
+
+**Опція 2: Використання Git submodules (рекомендовано)**
+
+```bash
+# 1. Клонуємо головний репозиторій
+git clone --recurse-submodules https://github.com/victorchei/docker-lab-3-HelloDockerRealWorld.git
+cd docker-lab-3-HelloDockerRealWorld
+
+# Якщо submodules не завантажилися автоматично:
+git submodule update --init --recursive
+```
+
+**Перевірка структури проекту:**
+
+```bash
+ls -la
+# Повинно бути:
+# - docker-compose.yml
+# - README.md
+# - frontend/ (папка з frontend кодом)
+# - api/ (папка з API кодом)
 ```
 
 #### Створення docker-compose.yml з трьома сервісами
@@ -133,19 +191,21 @@ git clone https://gitlab.com/web-systems-docker/docker-nodejs-app-lab2 .
 ```yaml
 version: '3'
 services:
-  # Frontend сервіс (Nginx + статичні файли)
+  # Frontend сервіс (Node.js serve для статичних файлів)
   frontend:
-    build: ./frontend
+    image: node:alpine
+    working_dir: /app
+    volumes:
+      - ./docker-lab-3-frontend:/app
+    command: npx serve -s . -l 8080
     ports:
-      - '8080:80'
+      - '8080:8080'
     depends_on:
       - api
-    networks:
-      - app-network
 
   # API сервіс (Node.js + Express)
   api:
-    build: ./api
+    build: ./docker-lab-3-api
     command: npm start
     ports:
       - '3001:3001'
@@ -155,27 +215,10 @@ services:
       - MONGO_URL=mongodb://api_db:27017/api
     depends_on:
       - api_db
-    networks:
-      - app-network
 
   # База даних (MongoDB)
   api_db:
     image: mongo:latest
-    environment:
-      - MONGO_INITDB_DATABASE=api
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - app-network
-
-# Мережа для зв'язку між сервісами
-networks:
-  app-network:
-    driver: bridge
-
-# Том для збереження даних MongoDB
-volumes:
-  mongodb_data:
 ```
 
 ### 3. Запуск та тестування
@@ -281,25 +324,24 @@ curl -X POST http://localhost:3001/users \
 
 ### docker-compose.yml
 
-- **frontend** - веб-сервіс на базі Nginx для статичних файлів (HTML/CSS/JS)
-- **api** - веб-сервіс Node.js з Express.js для обробки API запитів
-- **api_db** - сервіс MongoDB для збереження даних користувачів
-- **networks** - створює ізольовану мережу для зв'язку між сервісами
-- **volumes** - зберігає дані MongoDB між перезапусками контейнерів
+- **frontend** - веб-сервіс на базі Node.js Alpine з `serve` пакетом для статичних файлів
+- **api** - веб-сервіс Node.js з Express.js для обробки API запитів (з Dockerfile)
+- **api_db** - сервіс MongoDB для збереження даних користувачів (без персистентних volumes)
 - **depends_on** - забезпечує правильний порядок запуску сервісів
 
-### Dockerfile (Frontend)
+### Frontend конфігурація (Node.js + serve)
 
-- Використовує **nginx:alpine** - легкий веб-сервер
-- Копіює статичні файли до `/usr/share/nginx/html/`
-- Налаштовує проксування API запитів до backend
-- Відкриває порт 80 для HTTP трафіку
+- Використовує **node:alpine** - легкий Node.js образ
+- Монтує папку `./frontend` до `/app` в контейнері
+- Використовує `npx serve` для обслуговування статичних файлів
+- Запускається на порту 8080 (як всередині контейнера, так і ззовні)
+- Не потребує окремого Dockerfile - все налаштовується через docker-compose
 
-### Nginx конфігурація
+### API конфігурація (Node.js + Express)
 
-- Обслуговує статичні файли (HTML, CSS, JS)
-- Проксує `/api/` запити до Node.js сервера
-- Налаштовує CORS headers для крос-доменних запитів
+- Будується з окремого Dockerfile в папці `./api`
+- Запускається командою `npm start`
+- Підключається до MongoDB через змінну середовища `MONGO_URL`
 
 ### Змінні середовища
 
@@ -328,13 +370,13 @@ docker-compose logs api_db
 docker-compose logs -f
 
 # Перезапуск окремого сервісу
-docker-compose restart api
+docker compose restart api
 
 # Видалення всіх контейнерів та образів
-docker-compose down --rmi all
+docker compose down --rmi all
 
-# Видалення всіх даних (включно з томами)
-docker-compose down -v
+# Повне очищення (контейнери та образи)
+docker compose down --rmi all
 ```
 
 ## Troubleshooting
@@ -368,4 +410,5 @@ docker image prune
 # Видалити невикористовувані томи
 docker volume prune
 ```
+
 # docker-lab-3-HelloDockerRealWorld
