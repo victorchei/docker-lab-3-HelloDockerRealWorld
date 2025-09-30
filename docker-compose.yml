@@ -3,8 +3,6 @@ services:
   frontend:
     image: node:alpine
     working_dir: /app
-    volumes:
-      - ./docker-lab-3-frontend:/app
     command: npx serve -s . -l 8080
     ports:
       - '8080:8080'
