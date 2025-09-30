@@ -1,0 +1,6 @@
+[submodule "docker-lab-3-frontend"]
+	path = docker-lab-3-frontend
+	url = https://github.com/victorchei/docker-lab-3-frontend.git
+[submodule "docker-lab-3-api"]
+	path = docker-lab-3-api
+	url = https://github.com/victorchei/docker-lab-3-api.git
