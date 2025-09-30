@@ -61,7 +61,7 @@ docker-lab-3-api/
 
 1. **Frontend** (порт 8080) - Веб-інтерфейс користувача
 
-   - Nginx веб-сервер для статичних файлів
+   - npx serve веб-сервер для статичних файлів
    - HTML/CSS/JavaScript інтерфейс
    - Проксування API запитів до backend
 
@@ -91,7 +91,7 @@ docker-lab-3-api/
 
 #### Створення простого docker-compose.yml
 
-У кореневій папці проекту створіть файл `docker-compose.yml` з таким вмістом:
+У кореневій папці проекту створено файл `docker-compose.yml` з таким вмістом:
 
 ```yaml
 version: '3'
@@ -131,7 +131,7 @@ docker compose restart frontend
 **Перегляд працюючих контейнерів:**
 
 ```bash
-docker ps
+docker ps -a
 ```
 
 **Зупинка контейнерів:**
