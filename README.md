@@ -170,9 +170,8 @@ git clone https://github.com/victorchei/docker-lab-3-api.git
 # 1. Клонуємо головний репозиторій
 git clone --recurse-submodules https://github.com/victorchei/docker-lab-3-HelloDockerRealWorld.git
 cd docker-lab-3-HelloDockerRealWorld
-
-# Якщо submodules не завантажилися автоматично:
 git submodule update --init --recursive
+
 ```
 
 **Перевірка структури проекту:**
