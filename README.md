@@ -158,10 +158,10 @@ git clone https://github.com/victorchei/docker-lab-3-HelloDockerRealWorld.git
 cd docker-lab-3-HelloDockerRealWorld
 
 # 2. Клонуємо frontend репозиторій
-git clone https://github.com/victorchei/docker-lab-3-frontend.git frontend
+git clone https://github.com/victorchei/docker-lab-3-frontend.git
 
 # 3. Клонуємо API репозиторій
-git clone https://github.com/victorchei/docker-lab-3-api.git api
+git clone https://github.com/victorchei/docker-lab-3-api.git
 ```
 
 **Опція 2: Використання Git submodules (рекомендовано)**
